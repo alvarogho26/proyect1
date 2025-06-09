@@ -34,15 +34,15 @@ pygame.display.set_caption("Trashmorph")
 def load_image(path):
     return pygame.image.load(path).convert_alpha()
 
-player_img = load_image("Basumontt/Basumontt/assets/player.png")
-enemy_img = load_image("Basumontt/Basumontt/assets/enemy.png")
-bullet_img = load_image("Basumontt/Basumontt/assets/bullet.png")
-trash_bullet_img = load_image("Basumontt/Basumontt/assets/trash_bullet.png")
-powerup_speed_img = load_image("Basumontt/Basumontt/assets/powerup_speed.png")
-powerup_double_img = load_image("Basumontt/Basumontt/assets/powerup_double.png")
+player_img = load_image("Basumontt/Basumonttinside/assets/player.png")
+enemy_img = load_image("Basumontt/Basumonttinside/assets/enemy.png")
+bullet_img = load_image("Basumontt/Basumonttinside/assets/bullet.png")
+trash_bullet_img = load_image("Basumontt/Basumonttinside/assets/trash_bullet.png")
+powerup_speed_img = load_image("Basumontt/Basumonttinside/assets/powerup_speed.png")
+powerup_double_img = load_image("Basumontt/Basumonttinside/assets/powerup_double.png")
 
 def load_background(lvl):
-    return pygame.image.load(f"Basumontt/Basumontt/levels/level_{lvl}.jpg")
+    return pygame.image.load(f"Basumontt/Basumonttinside/levels/level_{lvl}.jpg")
 
 # Sonidos
 
@@ -108,7 +108,7 @@ class Enemy:
 
     def move(self):
         self.rect.x += self.direction * ENEMY_SPEED * DIFFICULTIES[difficulty]
-        if self.rect.right > random.randrange(200,900) or self.rect.left < random.randrange(0,75):
+        if self.rect.right > random.randrange(450,900) or self.rect.left < random.randrange(0,100):
             self.direction *= -1
 
     def shoot_trash(self, trash_bullets):
@@ -188,7 +188,7 @@ def game_loop():
                 pygame.quit()
                 sys.exit()
         if keys[pygame.K_ESCAPE]:
-            show_menu("Basumontt/Basumontt/menus/pause_menu.jpg")
+            show_menu("Basumontt/Basumonttinside/menus/pause_menu.jpg")
 
         # Movimiento
         player.move(keys)
@@ -217,7 +217,7 @@ def game_loop():
 
         for trash in trash_bullets:
             if trash.rect.colliderect(player.rect):
-                show_menu("Basumontt/Basumontt/menus/game_over.jpg")
+                show_menu("Basumontt/Basumonttinside/menus/game_over.jpg")
                 return
 
         for power in powerups[:]:
@@ -244,12 +244,12 @@ def game_loop():
         if random.randint(0, 1000) < 3:
             level += 1
             if level > LEVELS:
-                show_menu("Basumontt/Basumontt/menus/victory.jpg")
+                show_menu("Basumontt/Basumonttinside/menus/victory.jpg")
                 return
             bg = load_background(level)
 
 # Iniciar
-show_menu("Basumontt/Basumontt/menus/main_menu.jpg")
+show_menu("Basumontt/Basumonttinside/menus/main_menu.jpg")
 def show_start_menu():
     global difficulty, level
 

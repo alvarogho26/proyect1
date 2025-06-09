@@ -28,7 +28,7 @@ level = 7
 
 # Pantalla
 win = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Trashmorph")
+pygame.display.set_caption("Basumontt")
 
 # Cargar recursos
 def load_image(path):

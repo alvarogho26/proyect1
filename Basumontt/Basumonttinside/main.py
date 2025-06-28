@@ -3,7 +3,7 @@ import random
 import sys
 import os
 
-# Inicializar pygame
+
 pygame.init()
 
 # Constantes
@@ -27,14 +27,16 @@ level = 7
 
 # Pantalla
 win = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("basumontt")
+pygame.display.set_caption("Basumontt")
 
-# Cargar recursos
 def load_image(path):
+    if not os.path.exists(path):
+        print(f"[ERROR] Imagen no encontrada: {path}")
+        sys.exit()
     return pygame.image.load(path).convert_alpha()
 
 def load_background(lvl):
-    return pygame.image.load(f"Basumontt/Basumonttinside/levels/level_{lvl}.jpg")
+    return load_image(f"Basumontt/Basumonttinside/levels/level_{lvl}.jpg")
 
 player_img = load_image("Basumontt/Basumonttinside/assets/player.png")
 enemy_img = load_image("Basumontt/Basumonttinside/assets/enemy.png")
@@ -42,10 +44,12 @@ bullet_img = load_image("Basumontt/Basumonttinside/assets/bullet.png")
 trash_bullet_img = load_image("Basumontt/Basumonttinside/assets/trash_bullet.png")
 powerup_speed_img = load_image("Basumontt/Basumonttinside/assets/powerup_speed.png")
 powerup_double_img = load_image("Basumontt/Basumonttinside/assets/powerup_double.png")
-main_menu_bg = pygame.image.load("Basumontt/Basumonttinside/menus/main_menu.jpg")
+main_menu_bg = load_image("Basumontt/Basumonttinside/menus/main_menu.jpg")
+victory_bg = load_image("Basumontt/Basumonttinside/menus/victory.png")
+game_over_bg = load_image("Basumontt/Basumonttinside/menus/game_over.png")
 retro_font = pygame.font.Font("Basumontt/Basumonttinside/assets/fonts/pixel.ttf", 24)
 
-# Clases
+
 class AnimatedSprite(pygame.sprite.Sprite):
     def __init__(self, images, x, y, scale=1.0, health=100):
         super().__init__()
@@ -62,27 +66,72 @@ class AnimatedSprite(pygame.sprite.Sprite):
         if self.index >= len(self.images):
             self.index = 0
         self.image = self.images[int(self.index)]
-
 class Player:
-    def __init__(self):
-        self.image = player_img
+    def __init__(self, images):
+        self.images = [load_image(img) for img in images]  
+        self.index = 0
+        self.image = self.images[0]
         self.rect = self.image.get_rect(center=(WIDTH // 2, HEIGHT - 60))
         self.speed = PLAYER_SPEED
         self.cooldown = 500
         self.last_shot = pygame.time.get_ticks()
         self.double_shot = False
-        self.health = 100
-        self.max_health = 100
+        self.health = 700
+        self.max_health = 700
+        self.animation_speed = 0.15
+
+        #Animación de ataque
+        self.attacking = False
+        self.attack_timer = 0
+        self.attack_duration = 200  
 
     def move(self, keys):
+        if self.attacking:
+            return
+
+        moving = False
         if keys[pygame.K_LEFT] and self.rect.left > 0:
             self.rect.x -= self.speed
+            moving = True
         if keys[pygame.K_RIGHT] and self.rect.right < WIDTH:
             self.rect.x += self.speed
-        if keys[pygame.K_UP] and self.rect.top > HEIGHT/2:
+            moving = True
+        if keys[pygame.K_UP] and self.rect.top > HEIGHT / 2:
             self.rect.y -= self.speed
+            moving = True
         if keys[pygame.K_DOWN] and self.rect.bottom < HEIGHT:
             self.rect.y += self.speed
+            moving = True
+
+        if moving:
+            self.index += self.animation_speed
+            if self.index >= len(self.images) - 1:  
+                self.index = 0
+            self.image = self.images[int(self.index)]
+
+    def shoot(self, bullets):
+        now = pygame.time.get_ticks()
+        if now - self.last_shot > self.cooldown:
+            self.last_shot = now
+            bullets.append(Bullet(self.rect.centerx, self.rect.top))
+            if self.double_shot:
+                bullets.append(Bullet(self.rect.centerx - 20, self.rect.top))
+
+
+            self.attacking = True
+            self.attack_timer = now
+            self.image = self.images[4]  
+
+    def draw(self, win):
+        if self.attacking and pygame.time.get_ticks() - self.attack_timer > self.attack_duration:
+            self.attacking = False
+            self.index = 0 
+            self.image = self.images[int(self.index)]
+
+        win.blit(self.image, self.rect)
+
+
+
 
     def shoot(self, bullets):
         now = pygame.time.get_ticks()
@@ -106,11 +155,11 @@ class Enemy:
 
     def move(self):
         self.rect.x += self.direction * ENEMY_SPEED * DIFFICULTIES[difficulty]
-        if self.rect.right > random.randrange(450,900) or self.rect.left < random.randrange(0,50):
+        if self.rect.right > WIDTH or self.rect.left < 0:
             self.direction *= -1
 
     def shoot_trash(self, trash_bullets):
-        if pygame.time.get_ticks() - self.trash_timer > 1000:
+        if pygame.time.get_ticks() - self.trash_timer > 600:
             self.trash_timer = pygame.time.get_ticks()
             trash_bullets.append(TrashBullet(self.rect.centerx, self.rect.bottom))
 
@@ -151,12 +200,13 @@ class PowerUp:
     def draw(self, win):
         win.blit(self.image, self.rect)
 
-# Menús generales
+# Menús
 
-def draw_menu(options, title=None):
+
+def draw_menu(options, title=None, bg_img=main_menu_bg):
     selected = 0
     while True:
-        win.blit(main_menu_bg, (0, 0))
+        win.blit(bg_img, (0, 0))
         if title:
             title_text = retro_font.render(title, True, (0, 200, 255))
             win.blit(title_text, (40, HEIGHT - 160))
@@ -174,15 +224,15 @@ def draw_menu(options, title=None):
                 pygame.quit()
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP:
+                if event.key == pygame.K_w:
                     selected = (selected - 1) % len(options)
-                elif event.key == pygame.K_DOWN:
+                elif event.key == pygame.K_s:
                     selected = (selected + 1) % len(options)
                 elif event.key == pygame.K_RETURN:
                     return options[selected]
 
 def show_main_menu():
-    choice = draw_menu(["INICIAR", "ELEGIR DIFICULTAD", "SALIR"])
+    choice = draw_menu(["INICIAR", "ELEGIR DIFICULTAD", "SALIR"], bg_img=main_menu_bg)
     if choice == "INICIAR":
         show_character_selector()
         return
@@ -193,9 +243,9 @@ def show_main_menu():
         sys.exit()
     show_main_menu()
 
-
 def show_game_over_menu():
-    choice = draw_menu(["REINTENTAR", "MENU", "SALIR"], title="GAME OVER")
+    
+    choice = draw_menu(["REINTENTAR", "MENU", "SALIR"], title="GAME OVER", bg_img=game_over_bg)
     if choice == "REINTENTAR":
         game_loop()
     elif choice == "MENU":
@@ -206,7 +256,8 @@ def show_game_over_menu():
         sys.exit()
 
 def show_victory_menu():
-    choice = draw_menu(["VOLVER A JUGAR", "MENU", "SALIR"], title="VICTORIA")
+   
+    choice = draw_menu(["VOLVER A JUGAR", "MENU", "SALIR"], title="VICTORIA", bg_img=victory_bg)
     if choice == "VOLVER A JUGAR":
         game_loop()
     elif choice == "MENU":
@@ -223,10 +274,10 @@ def draw_health_bars(win, player, enemy):
     pygame.draw.rect(win, (255, 0, 0), (WIDTH - 220, 20, 200, 20))
     pygame.draw.rect(win, (0, 255, 0), (WIDTH - 220, 20, 200 * enemy.health / enemy.max_health, 20))
 
-# Menú de inicio (dificultad y nivel)
+# Menú de inicio 
 def show_start_menu():
     global difficulty, level
-    font = pygame.font.SysFont("arial", 32)
+    font = retro_font.render
     title_font = pygame.font.SysFont("arial", 48, bold=True)
     options = {
         "Dificultad": ["principiante", "normal", "ingeniero"],
@@ -237,15 +288,15 @@ def show_start_menu():
     selected_row = 0
     while selecting:
         win.fill((30, 30, 30))
-        title = title_font.render("basumontt", True, (0, 200, 255))
+        title = retro_font.render("Basumontt", True, (0, 200, 255))
         win.blit(title, (WIDTH // 2 - title.get_width() // 2, 40))
         ypos = 150
         for idx, (label, choices) in enumerate(options.items()):
             color = (255, 255, 255) if idx != selected_row else (0, 255, 0)
-            text = font.render(f"{label}: {choices[selected[label]]}", True, color)
+            text = retro_font.render(f"{label}: {choices[selected[label]]}", True, color)
             win.blit(text, (WIDTH // 2 - text.get_width() // 2, ypos))
             ypos += 60
-        instructions = font.render("← → para cambiar | ↑ ↓ para mover | Enter para jugar", True, (200, 200, 200))
+        instructions = retro_font.render("a d para cambiar | w s para mover | Enter para jugar", True, (200, 200, 200))
         win.blit(instructions, (WIDTH // 2 - instructions.get_width() // 2, HEIGHT - 100))
         pygame.display.update()
         for event in pygame.event.get():
@@ -253,14 +304,14 @@ def show_start_menu():
                 pygame.quit()
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP:
+                if event.key == pygame.K_w:
                     selected_row = (selected_row - 1) % len(options)
-                elif event.key == pygame.K_DOWN:
+                elif event.key == pygame.K_s:
                     selected_row = (selected_row + 1) % len(options)
-                elif event.key == pygame.K_LEFT:
+                elif event.key == pygame.K_a:
                     key = list(options.keys())[selected_row]
                     selected[key] = (selected[key] - 1) % len(options[key])
-                elif event.key == pygame.K_RIGHT:
+                elif event.key == pygame.K_d:
                     key = list(options.keys())[selected_row]
                     selected[key] = (selected[key] + 1) % len(options[key])
                 elif event.key == pygame.K_RETURN:
@@ -269,11 +320,19 @@ def show_start_menu():
                     selecting = False
 
 def show_character_selector():
-    global player_img
     clock = pygame.time.Clock()
     selected = 0
-    characters = ["Basumontt/Basumonttinside/assets/player1.png", "Basumontt/Basumonttinside/assets/player2.png"]
-    character_imgs = [load_image(img) for img in characters]
+
+    #sprites
+    character_sets = [
+        ["Basumontt/Basumonttinside/assets/player_1/move_0.png", "Basumontt/Basumonttinside/assets/player_1/move_1.png", "Basumontt/Basumonttinside/assets/player_1/move_4.png"],
+        ["Basumontt/Basumonttinside/assets/player_2/move_0.png", "Basumontt/Basumonttinside/assets/player_2/move_1.png", "Basumontt/Basumonttinside/assets/player_2/move_2.png", "Basumontt/Basumonttinside/assets/player_2/move_4.png"]
+    ]
+
+    character_previews = [
+        load_image("Basumontt/Basumonttinside/assets/player_1/move_5.png"),
+        load_image("Basumontt/Basumonttinside/assets/player_2/move_5.png")
+    ]
 
     selecting = True
     while selecting:
@@ -283,7 +342,7 @@ def show_character_selector():
         title = retro_font.render("ELEGIR PERSONAJE", True, (0, 200, 255))
         win.blit(title, (WIDTH // 2 - title.get_width() // 2, 40))
 
-        for i, img in enumerate(character_imgs):
+        for i, img in enumerate(character_previews):
             x = WIDTH // 2 - img.get_width() - 60 if i == 0 else WIDTH // 2 + 60
             y = HEIGHT // 2 - img.get_height() // 2
             rect = pygame.Rect(x - 10, y - 10, img.get_width() + 20, img.get_height() + 20)
@@ -302,19 +361,23 @@ def show_character_selector():
                 pygame.quit()
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
-                    selected = (selected - 1) % 2
-                elif event.key == pygame.K_RIGHT:
-                    selected = (selected + 1) % 2
+                if event.key == pygame.K_a:
+                    selected = (selected - 1) % len(character_sets)
+                elif event.key == pygame.K_d:
+                    selected = (selected + 1) % len(character_sets)
                 elif event.key == pygame.K_RETURN:
-                    player_img = player_img
+                    game_loop(character_sets[selected])
                     selecting = False
+                    return
 
-# Bucle principal del juego
-def game_loop():
+
+
+def game_loop(player_images=None):
     global level
     clock = pygame.time.Clock()
-    player = Player()
+    if not player_images:
+        player_images = ["Basumontt/Basumonttinside/assets/player_1/move_0.png", "Basumontt/Basumonttinside/assets/player_1/move_1.png", "Basumontt/Basumonttinside/assets/player_1/move_2.png"]
+    player = Player(player_images)
     enemy = Enemy()
     bullets = []
     trash_bullets = []
@@ -349,6 +412,7 @@ def game_loop():
         trash_bullets = [t for t in trash_bullets if t.rect.top < HEIGHT]
         for trash in trash_bullets:
             if trash.rect.colliderect(player.rect):
+                
                 show_game_over_menu()
                 return
         for power in powerups[:]:
@@ -364,11 +428,13 @@ def game_loop():
                 enemy.health -= 10
                 hit_timer = pygame.time.get_ticks()
                 if enemy.health <= 0:
-                    level += 1
+                    
                     if level > LEVELS:
+                    
                         show_victory_menu()
                         return
                     bg = load_background(level)
+                    level += 1
                     enemy = Enemy()
         win.blit(bg, (0, 0))
         player.draw(win)
@@ -384,6 +450,4 @@ def game_loop():
         draw_health_bars(win, player, enemy)
         pygame.display.update()
 
-# Iniciar
 show_main_menu()
-game_loop()

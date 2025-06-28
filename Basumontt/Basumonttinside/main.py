@@ -244,25 +244,27 @@ def show_main_menu():
     show_main_menu()
 
 def show_game_over_menu():
-    
+    global level
     choice = draw_menu(["REINTENTAR", "MENU", "SALIR"], title="GAME OVER", bg_img=game_over_bg)
     if choice == "REINTENTAR":
+        
         game_loop()
     elif choice == "MENU":
         show_main_menu()
-        game_loop()
+        return
     elif choice == "SALIR":
         pygame.quit()
         sys.exit()
 
 def show_victory_menu():
-   
+    global level
     choice = draw_menu(["VOLVER A JUGAR", "MENU", "SALIR"], title="VICTORIA", bg_img=victory_bg)
     if choice == "VOLVER A JUGAR":
+        level=1
         game_loop()
     elif choice == "MENU":
         show_main_menu()
-        game_loop()
+        return
     elif choice == "SALIR":
         pygame.quit()
         sys.exit()
@@ -428,13 +430,13 @@ def game_loop(player_images=None):
                 enemy.health -= 10
                 hit_timer = pygame.time.get_ticks()
                 if enemy.health <= 0:
-                    
+                    level += 1
                     if level > LEVELS:
                     
                         show_victory_menu()
                         return
                     bg = load_background(level)
-                    level += 1
+                    
                     enemy = Enemy()
         win.blit(bg, (0, 0))
         player.draw(win)

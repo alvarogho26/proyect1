@@ -6,7 +6,12 @@ import os
 player_lives = 3
 selected_character_images = None
 pygame.init()
-
+menu_move_sound = pygame.mixer.Sound("Basumontt/Basumonttinside/assets/sfx/bip.wav")
+main_levels_song = "Basumontt/Basumonttinside/assets/sfx/song_level.mp3"
+final_levels_song = "Basumontt/Basumonttinside/assets/sfx/final_song_level.mp3"
+pygame.mixer.music.load("Basumontt/Basumonttinside/assets/sfx/menu_song.mp3")
+pygame.mixer.music.set_volume(0.1)
+pygame.mixer.music.play(-1)
 # Constantes
 WIDTH, HEIGHT = 800, 600
 FPS = 60
@@ -39,6 +44,7 @@ def load_image(path):
 def load_background(lvl):
     return load_image(f"Basumontt/Basumonttinside/levels/level_{lvl}.png")
 
+enemy_final_img = load_image("Basumontt/Basumonttinside/assets/enemymax.png")
 player_img = load_image("Basumontt/Basumonttinside/assets/player.png")
 enemy_img = load_image("Basumontt/Basumonttinside/assets/enemy.png")
 bullet_img = load_image("Basumontt/Basumonttinside/assets/bullet.png")
@@ -146,8 +152,11 @@ class Player:
         win.blit(self.image, self.rect)
 
 class Enemy:
-    def __init__(self):
-        self.image = enemy_img
+    def __init__(self, level):
+        if level == 10:
+            self.image = enemy_final_img
+        else:
+            self.image = enemy_img
         self.rect = self.image.get_rect(center=(WIDTH // 2, 80))
         self.direction = 1
         self.trash_timer = pygame.time.get_ticks()
@@ -232,12 +241,18 @@ def draw_menu(options, title=None, bg_img=main_menu_bg):
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
                     selected = (selected - 1) % len(options)
+                    menu_move_sound.play()
                 elif event.key == pygame.K_DOWN:
                     selected = (selected + 1) % len(options)
-                elif event.key == pygame.K_RETURN:
+                    menu_move_sound.play()
+                elif event.key == pygame.K_z:
+                    menu_move_sound.play()
                     return options[selected]
 
 def show_main_menu():
+    pygame.mixer.music.load("Basumontt/Basumonttinside/assets/sfx/menu_song.mp3")
+    pygame.mixer.music.set_volume(0.1)
+    pygame.mixer.music.play(-1)
     choice = draw_menu(["INICIAR", "ELEGIR DIFICULTAD", "SALIR"], bg_img=main_menu_bg)
     if choice == "INICIAR":
         show_character_selector()
@@ -251,6 +266,10 @@ def show_main_menu():
 
 def show_game_over_menu():
     global level
+    pygame.mixer.music.stop()
+    pygame.mixer.music.load("Basumontt/Basumonttinside/assets/sfx/losing.mp3")
+    pygame.mixer.music.set_volume(0.3)
+    pygame.mixer.music.play(1)
     choice = draw_menu(["REINTENTAR", "MENU", "SALIR"], title="GAME OVER", bg_img=game_over_bg)
     if choice == "REINTENTAR":
         level=1
@@ -264,6 +283,10 @@ def show_game_over_menu():
 
 def show_victory_menu():
     global level
+    pygame.mixer.music.stop()
+    pygame.mixer.music.load("Basumontt/Basumonttinside/assets/sfx/winning.mp3")
+    pygame.mixer.music.set_volume(0.3)
+    pygame.mixer.music.play(1)
     choice = draw_menu(["VOLVER A JUGAR", "MENU", "SALIR"], title="VICTORIA", bg_img=victory_bg)
     if choice == "VOLVER A JUGAR":
         level=1
@@ -304,7 +327,7 @@ def show_start_menu():
             text = retro_font.render(f"{label}: {choices[selected[label]]}", True, color)
             win.blit(text, (WIDTH // 2 - text.get_width() // 2, ypos))
             ypos += 60
-        instructions = retro_font.render("a d para cambiar | w s para mover | Enter para jugar", True, (200, 200, 200))
+        instructions = retro_font.render("← → para cambiar | ↑ ↓ para mover | Z para jugar", True, (200, 200, 200))
         win.blit(instructions, (WIDTH // 2 - instructions.get_width() // 2, HEIGHT - 100))
         pygame.display.update()
         for event in pygame.event.get():
@@ -314,18 +337,31 @@ def show_start_menu():
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
                     selected_row = (selected_row - 1) % len(options)
+                    menu_move_sound.play()
                 elif event.key == pygame.K_DOWN:
                     selected_row = (selected_row + 1) % len(options)
+                    menu_move_sound.play()
                 elif event.key == pygame.K_LEFT:
                     key = list(options.keys())[selected_row]
                     selected[key] = (selected[key] - 1) % len(options[key])
+                    menu_move_sound.play()
                 elif event.key == pygame.K_RIGHT:
                     key = list(options.keys())[selected_row]
                     selected[key] = (selected[key] + 1) % len(options[key])
-                elif event.key == pygame.K_RETURN:
+                    menu_move_sound.play()
+                elif event.key == pygame.K_z:
+                    menu_move_sound.play()
                     difficulty = options["Dificultad"][selected["Dificultad"]]
                     level = options["Nivel"][selected["Nivel"]]
                     selecting = False
+
+def play_level_music(level):
+    if level < 10:
+        pygame.mixer.music.load(main_levels_song)
+    else:
+        pygame.mixer.music.load(final_levels_song)
+    pygame.mixer.music.set_volume(0.1)
+    pygame.mixer.music.play(-1)
 
 def show_character_selector():
     global selected_character_images
@@ -359,7 +395,7 @@ def show_character_selector():
             pygame.draw.rect(win, border_color, rect, border_radius=10)
             win.blit(img, (x, y))
 
-        instructions = retro_font.render("← → para elegir | Enter para confirmar", True, (200, 200, 200))
+        instructions = retro_font.render("← → para elegir | Z para confirmar", True, (200, 200, 200))
         win.blit(instructions, (WIDTH // 2 - instructions.get_width() // 2, HEIGHT - 80))
 
         pygame.display.update()
@@ -369,11 +405,11 @@ def show_character_selector():
                 pygame.quit()
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_a:
+                if event.key == pygame.K_LEFT:
                     selected = (selected - 1) % len(character_sets)
-                elif event.key == pygame.K_d:
+                elif event.key == pygame.K_RIGHT:
                     selected = (selected + 1) % len(character_sets)
-                elif event.key == pygame.K_RETURN:
+                elif event.key == pygame.K_z:
                     selected_character_images = character_sets[selected]  
                     game_loop(selected_character_images)
                     selecting = False
@@ -387,11 +423,13 @@ def game_loop(player_images=None):
     if not player_images:
         player_images = ["Basumontt/Basumonttinside/assets/player_1/move_0.png", "Basumontt/Basumonttinside/assets/player_1/move_1.png", "Basumontt/Basumonttinside/assets/player_1/move_2.png"]
     player = Player(player_images)
-    enemy = Enemy()
+    enemy = Enemy(level)
     bullets = []
     trash_bullets = []
     powerups = []
     bg = load_background(level)
+    pygame.mixer.music.stop()
+    play_level_music(level)
     hit_timer = 0
     running = True
     while running:
@@ -444,7 +482,9 @@ def game_loop(player_images=None):
                         return
                     bg = load_background(level)
                     
-                    enemy = Enemy()
+                    enemy = Enemy(level)
+                    pygame.mixer.music.stop()
+                    play_level_music(level) 
         win.blit(bg, (0, 0))
         player.draw(win)
         enemy.draw(win)

@@ -83,8 +83,8 @@ class Player:
         self.cooldown = 500
         self.last_shot = pygame.time.get_ticks()
         self.double_shot = False
-        self.health = 700
-        self.max_health = 700
+        self.health = 150
+        self.max_health = 150
         self.animation_speed = 0.15
 
         #Animación de ataque
@@ -459,9 +459,11 @@ def game_loop(player_images=None):
         trash_bullets = [t for t in trash_bullets if t.rect.top < HEIGHT]
         for trash in trash_bullets:
             if trash.rect.colliderect(player.rect):
-                
-                show_game_over_menu()
-                return
+                trash_bullets.remove(trash)
+                player.health -=50
+                if player.health <=0:
+                    show_game_over_menu()
+                    return
         for power in powerups[:]:
             if power.rect.colliderect(player.rect):
                 if power.kind == "speed":

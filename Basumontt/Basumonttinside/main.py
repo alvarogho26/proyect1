@@ -10,7 +10,7 @@ menu_move_sound = pygame.mixer.Sound("Basumontt/Basumonttinside/assets/sfx/bip.w
 main_levels_song = "Basumontt/Basumonttinside/assets/sfx/song_level.mp3"
 final_levels_song = "Basumontt/Basumonttinside/assets/sfx/final_song_level.mp3"
 pygame.mixer.music.load("Basumontt/Basumonttinside/assets/sfx/menu_song.mp3")
-pygame.mixer.music.set_volume(0.1)
+pygame.mixer.music.set_volume(0.8)
 pygame.mixer.music.play(-1)
 # Constantes
 WIDTH, HEIGHT = 800, 600
@@ -251,7 +251,7 @@ def draw_menu(options, title=None, bg_img=main_menu_bg):
 
 def show_main_menu():
     pygame.mixer.music.load("Basumontt/Basumonttinside/assets/sfx/menu_song.mp3")
-    pygame.mixer.music.set_volume(0.1)
+    pygame.mixer.music.set_volume(0.8)
     pygame.mixer.music.play(-1)
     choice = draw_menu(["INICIAR", "ELEGIR DIFICULTAD", "SALIR"], bg_img=main_menu_bg)
     if choice == "INICIAR":
@@ -268,7 +268,7 @@ def show_game_over_menu():
     global level
     pygame.mixer.music.stop()
     pygame.mixer.music.load("Basumontt/Basumonttinside/assets/sfx/losing.mp3")
-    pygame.mixer.music.set_volume(0.3)
+    pygame.mixer.music.set_volume(0.8)
     pygame.mixer.music.play(1)
     choice = draw_menu(["REINTENTAR", "MENU", "SALIR"], title="GAME OVER", bg_img=game_over_bg)
     if choice == "REINTENTAR":
@@ -285,7 +285,7 @@ def show_victory_menu():
     global level
     pygame.mixer.music.stop()
     pygame.mixer.music.load("Basumontt/Basumonttinside/assets/sfx/winning.mp3")
-    pygame.mixer.music.set_volume(0.3)
+    pygame.mixer.music.set_volume(0.8)
     pygame.mixer.music.play(1)
     choice = draw_menu(["VOLVER A JUGAR", "MENU", "SALIR"], title="VICTORIA", bg_img=victory_bg)
     if choice == "VOLVER A JUGAR":
@@ -360,10 +360,11 @@ def play_level_music(level):
         pygame.mixer.music.load(main_levels_song)
     else:
         pygame.mixer.music.load(final_levels_song)
-    pygame.mixer.music.set_volume(0.1)
+    pygame.mixer.music.set_volume(0.8)
     pygame.mixer.music.play(-1)
 
 def show_character_selector():
+    
     global selected_character_images
     clock = pygame.time.Clock()
     selected = 0

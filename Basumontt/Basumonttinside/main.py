@@ -369,6 +369,25 @@ def play_level_music(level):
     pygame.mixer.music.set_volume(0.8)
     pygame.mixer.music.play(-1)
 
+def pause_menu():
+    paused = True
+    pause_font = pygame.font.Font("Basumontt/Basumonttinside/assets/fonts/pixel.ttf", 32)
+    while paused:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    paused = False
+                elif event.key == pygame.K_q:
+                    show_main_menu()
+
+        pause_text = pause_font.render("PAUSA - Q para salir", True, (255, 255, 0))
+        win.blit(pause_text, (WIDTH // 2 - pause_text.get_width() // 2, HEIGHT // 2))
+        pygame.display.update()
+        pygame.time.Clock().tick(10)
+
 def show_character_selector():
     
     global selected_character_images
@@ -447,7 +466,7 @@ def game_loop(player_images=None):
                 pygame.quit()
                 sys.exit()
         if keys[pygame.K_ESCAPE]:
-            show_main_menu()
+            pause_menu()
         player.move(keys)
         enemy.move()
         enemy.shoot_trash(trash_bullets)

@@ -218,7 +218,7 @@ def draw_menu(options, title=None, bg_img=main_menu_bg):
     while True:
         win.blit(bg_img, (0, 0))
         if title:
-            title_text = retro_font.render(title, True, (0, 200, 255))
+            title_text = retro_font.render(title, True, (255, 0, 0))
             win.blit(title_text, (40, HEIGHT - 160))
 
         for i, option in enumerate(options):
@@ -226,9 +226,15 @@ def draw_menu(options, title=None, bg_img=main_menu_bg):
             text = retro_font.render(option, True, (255, 255, 255))
 
             if i == selected:
-                highlight_surface = pygame.Surface((text.get_width() + 20, text.get_height() + 10), pygame.SRCALPHA)
-                highlight_surface.fill((0, 200, 255, 120))
-                win.blit(highlight_surface, (x - 10, y - 5))
+                if title == "VICTORIA":
+                    highlight_surface = pygame.Surface((text.get_width() + 20, text.get_height() + 10), pygame.SRCALPHA)
+                    highlight_surface.fill((255, 0, 0, 120))
+                    win.blit(highlight_surface, (x - 10, y - 5))
+
+                else:
+                    highlight_surface = pygame.Surface((text.get_width() + 20, text.get_height() + 10), pygame.SRCALPHA)
+                    highlight_surface.fill((0, 200, 255, 120))
+                    win.blit(highlight_surface, (x - 10, y - 5))
 
             win.blit(text, (x, y))
 
